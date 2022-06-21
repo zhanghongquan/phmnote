@@ -8,5 +8,5 @@ def refresh_features():
     xjtu.refresh_features(db)
 
 db = Database()
-for x in db.list_features("Bearing3_1", "rms", "std_var"):
-    print(x)
+for x in db.list_features("Bearing3_1", "H", "rms", "std_var"):
+    print(x[0])
