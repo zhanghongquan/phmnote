@@ -2,7 +2,7 @@ import numpy as np
 from scipy import signal, integrate
 
 
-def acceleration2velocity(data, sample_rate, hp_frequency = 1, use_detrend=True):
+def acceleration2velocity(data, sample_rate, hp_frequency = 5, use_detrend=True):
     '''
     data collected by vibration sensors contain noise.
     data shift happens when we integrate acceleration to velocity,
@@ -16,10 +16,3 @@ def acceleration2velocity(data, sample_rate, hp_frequency = 1, use_detrend=True)
         data = signal.detrend(data)
     data = signal.sosfilt(sos, data)
     return integrate.cumulative_trapezoid(data, 1.0/sample_rate)
-
-
-def poorman_integrate(data, sample_rate):
-    pass
-
-def poorman_differentiate(data, sample_rate):
-    pass

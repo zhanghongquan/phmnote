@@ -44,6 +44,10 @@ class DiagnosisResult:
 
 class FaultDiagnosis:
     def __init__(self, fault_frequency, **kwargs):
+        '''
+        local fault diagnosis
+        filter_order order to pass into buttworth filter
+        '''
         self.fault_frequency = fault_frequency
         self.filter_order = kwargs.get("filter_order", 8)
         self.filter_band = kwargs.get("filter_band", 800)
