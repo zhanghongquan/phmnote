@@ -1,5 +1,5 @@
 from bearing.bearingdata import  XJTUData
-from bearing.features import Database
+from bearing.db import Database
 
 def refresh_features():
     db = Database()

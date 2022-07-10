@@ -4,23 +4,139 @@
 '''
 
 import os
-from operator import index
-from requests import session
-from sqlalchemy import Column, create_engine, String, Float, Integer
+from sqlalchemy import Column, create_engine, String, Float, Integer, LargeBinary
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
 
 Base = declarative_base()
 
+# 西交大全生命周期数据
 DATASOURCE_XJTU = 0
-
-
+# 西储大学数据
 DATASOURCE_CWRU = 1
 
 
+# 轴承数据
+DATA_TYPE = 0
+
+#齿轮数据
+DATA_TYPE = 1
+
+
+class DataSource(Base):
+    '''
+    data source is used to tell you which group does a dataset belongs to
+    '''
+    __tablename__ = "datasource"
+
+    id = Column(Integer, primary_key=True, autoincrement=False)
+
+    name = Column(String(64),unique=True)
+
+    description = Column(String(256))
+
+
+    def __repr__(self) -> str:
+        return f"{self.name}:{self.id}"
+
+class DataType(Base):
+    __tablename__ = "datatype"
+
+    id = Column(Integer, primary_key=True, autoincrement=False)
+
+    name = Column(String(64), unique=True)
+
+    description = Column(String(256))
+
+    def __repr__(self) -> str:
+        return f"{self.name}:{self.id}"
+
+
+class DataMeta(Base):
+    __tablename__ = "datameta"
+
+    id = Column(Integer, primary_key=True)
+
+    # data type such as bearing or gear data
+    data_type = Column(Integer)
+
+    # data name such as bearing_0
+    name = Column(String(128))
+
+
+class BearingAttribute(Base):
+    '''
+    轴承固有属性，主要用于定位内圈，外圈等故障频率系数
+    '''
+    __tablename__ = "bearing_attribute"
+
+    id = Column(Integer, primary_key=True)
+
+    name = Column(String(128), unique=True)
+
+    bpfo = Column(Float)
+
+    bpfi = Column(Float)
+
+    bsf = Column(Float)
+
+    ftf = Column(Float)
+
+
+class BearingParameter(Base):
+    __tablename__ = "bearing_parameter"
+
+    id = Column(Integer, primary_key=True)
+
+    name = Column(String(128), unique=True)
+
+    rps = Column(Float)
+
+    load = Column(Float)
+
+    # 使用时钟方向0~11来指定负载方向
+    direction = Column(Integer)
+
+
+class VibrationDataSet(Base):
+    __tablename__ = "vibration_data_set"
+
+    id = Column(Integer, primary_key=True)
+
+    mean = Column(Float) #均值
+
+    peak = Column(Float) #单峰值
+
+    peakpeak = Column(Float) #峰峰值
+    
+    rms = Column(Float) #均方根
+
+    root_square = Column(Float) #方根幅值
+
+    root = Column(Float) #方根幅值
+
+    peak_factor = Column(Float) #峰值因子， peak/rms
+
+    kurtosis_factor = Column(Float) # 峭度
+
+    skewness_factor = Column(Float) # 偏度
+
+    allowance_factor = Column(Float) #裕度因子
+
+    pulse_factror = Column(Float) #脉冲因为
+
+    std_var = Column(Float) # 标准差
+
+    variance = Column(Float) # 方差
+
+    wave = Column(LargeBinary) #原始波形
+
+
+
 class BearingDataFeature(Base):
-    __tablename__ = "features"
+    __tablename__ = "bearing_features"
+
     id = Column(Integer, primary_key=True)
 
     source = Column(Integer) #数据来源 0 --> xjtu, 1 --> cwru

@@ -5,8 +5,7 @@ import scipy.io as spio
 import pandas as pd
 import numpy as np
 from scipy import stats
-from sympy import im
-from .features import BearingDataFeature
+from .db import BearingDataFeature
 
 class InvalidParamaterException(Exception):
     def __init__(self, *args: object) -> None:
