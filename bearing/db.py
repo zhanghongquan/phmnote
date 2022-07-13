@@ -3,10 +3,13 @@
 当前只计算西交大的轴承数据的特征
 '''
 
+from ast import For
+from enum import unique
 import os
-from sqlalchemy import Column, create_engine, String, Float, Integer, LargeBinary
+from unicodedata import category
+from sqlalchemy import Column, ForeignKey, create_engine, String, Float, Integer, LargeBinary, DateTime
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.declarative import declarative_base, relationship
 
 
 Base = declarative_base()
@@ -24,11 +27,10 @@ DATA_TYPE = 0
 DATA_TYPE = 1
 
 
-class DataSource(Base):
+class DataCollection(Base):
     '''
-    data source is used to tell you which group does a dataset belongs to
     '''
-    __tablename__ = "datasource"
+    __tablename__ = "data_collection"
 
     id = Column(Integer, primary_key=True, autoincrement=False)
 
@@ -36,54 +38,64 @@ class DataSource(Base):
 
     description = Column(String(256))
 
-
-    def __repr__(self) -> str:
-        return f"{self.name}:{self.id}"
-
-class DataType(Base):
-    __tablename__ = "datatype"
-
-    id = Column(Integer, primary_key=True, autoincrement=False)
-
-    name = Column(String(64), unique=True)
-
-    description = Column(String(256))
-
     def __repr__(self) -> str:
         return f"{self.name}:{self.id}"
 
 
-class DataMeta(Base):
-    __tablename__ = "datameta"
+class DeviceInfo(Base):
+    __tablename__ = "device_info"
 
     id = Column(Integer, primary_key=True)
 
-    # data type such as bearing or gear data
-    data_type = Column(Integer)
-
-    # data name such as bearing_0
     name = Column(String(128))
 
+    category = Column(Integer)
 
-class BearingAttribute(Base):
-    '''
-    轴承固有属性，主要用于定位内圈，外圈等故障频率系数
-    '''
-    __tablename__ = "bearing_attribute"
+
+class Bearing(Base):
+    __tabelname__ = "bearing_info"
 
     id = Column(Integer, primary_key=True)
 
-    name = Column(String(128), unique=True)
-
-    bpfo = Column(Float)
+    deviceinfo_Id = Column(Integer, ForeignKey("deviceinfo.id"))
 
     bpfi = Column(Float)
+
+    bpfo = Column(Float)
 
     bsf = Column(Float)
 
     ftf = Column(Float)
 
 
+class BearingInfo:
+    id = 0
+
+    name = ""
+
+    bpfi = 0.0
+
+    bpfo = 0.0
+
+    bsf = 0.0
+
+    ftf =0.0
+
+class Gear(Base):
+    __tablename__ = "gear_info"
+
+    id = Column(Integer, primary_key=True)
+
+    deviceinfo_Id = Column(Integer, ForeignKey("deviceinfo.id"))
+
+
+class GearInfo:
+
+    id = 0
+
+    name = ""
+
+ 
 class BearingParameter(Base):
     __tablename__ = "bearing_parameter"
 
@@ -98,11 +110,39 @@ class BearingParameter(Base):
     # 使用时钟方向0~11来指定负载方向
     direction = Column(Integer)
 
+    def __repr__(self) -> str:
+        return f"{self.name}/rps:{self.rps}/dir:{self.direction}"
 
-class VibrationDataSet(Base):
-    __tablename__ = "vibration_data_set"
+
+class GearParameter(Base):
+    __tablename__ = "gear_parameter"
 
     id = Column(Integer, primary_key=True)
+
+    name = Column(String(128))
+
+
+class DataChannel(Base):
+    __tablename__ = "data_channel"
+
+    id = Column(Integer, primary_key=True)
+
+    device_id = Column(Integer, ForeignKey("device_info.id"))
+
+    name = Column(String(128), unique=True)
+
+
+class VibrationData(Base):
+    '''
+    vibration data, esspecial the acceleration data.
+    '''
+    __tablename__ = "vibration_data"
+
+    id = Column(Integer, primary_key=True)
+
+    channel_id = Column(Integer, ForeignKey("data_channel.id"))
+
+    timestamp = Column(DateTime)
 
     mean = Column(Float) #均值
 
@@ -131,49 +171,6 @@ class VibrationDataSet(Base):
     variance = Column(Float) # 方差
 
     wave = Column(LargeBinary) #原始波形
-
-
-
-class BearingDataFeature(Base):
-    __tablename__ = "bearing_features"
-
-    id = Column(Integer, primary_key=True)
-
-    source = Column(Integer) #数据来源 0 --> xjtu, 1 --> cwru
-
-    filename = Column(String(128), index=True) #文件名
-
-    channel = Column(String(12), index=True) # 例如横轴数据， 驱动端数据
-
-    file_idx = Column(Integer, index=True)
-
-    bearing_name = Column(String, index=True)
-
-    mean = Column(Float) #均值
-
-    peak = Column(Float) #单峰值
-
-    peakpeak = Column(Float) #峰峰值
-    
-    rms = Column(Float) #均方根
-
-    root_square = Column(Float) #方根幅值
-
-    root = Column(Float) #方根幅值
-
-    peak_factor = Column(Float) #峰值因子， peak/rms
-
-    kurtosis_factor = Column(Float) # 峭度
-
-    skewness_factor = Column(Float) # 偏度
-
-    allowance_factor = Column(Float) #裕度因子
-
-    pulse_factror = Column(Float) #脉冲因为
-
-    std_var = Column(Float) # 标准差
-
-    variance = Column(Float) # 方差
 
 
 
@@ -212,3 +209,4 @@ class Database:
             else:
                 sess.add(f)
             sess.commit()
+    
