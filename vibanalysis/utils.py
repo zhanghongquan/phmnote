@@ -4,6 +4,11 @@ class InvalidParameter(RuntimeError):
         super().__init__(*args)
 
 
+class TreeNodeExists(RuntimeError):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+
+
 def integrate_acceleration_to_velocity(data, n):
     '''
     using integration to calculate velocity from acceleration,

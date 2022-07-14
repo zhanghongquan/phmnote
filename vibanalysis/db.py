@@ -12,13 +12,12 @@
 8.              参数
 '''
 
-from ast import For
-from enum import unique
 import os
-from unicodedata import category
 from sqlalchemy import Column, ForeignKey, create_engine, String, Float, Integer, LargeBinary, DateTime
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base, relationship
+
+from .utils import TreeNodeExists
 
 
 Base = declarative_base()
@@ -51,32 +50,7 @@ class TreeNode(Base):
 
     category = Column(Integer) # 轴承数据/齿轮数据/目录
 
-    parent_id = Column(Integer) # 0 means current node is root node
-
-
-class DataCollection(Base):
-    '''
-    '''
-    __tablename__ = "data_collection"
-
-    id = Column(Integer, primary_key=True, autoincrement=False)
-
-    name = Column(String(64),unique=True)
-
-    description = Column(String(256))
-
-    def __repr__(self) -> str:
-        return f"{self.name}:{self.id}"
-
-
-class DeviceInfo(Base):
-    __tablename__ = "device_info"
-
-    id = Column(Integer, primary_key=True)
-
-    name = Column(String(128))
-
-    category = Column(Integer)
+    parent_id = Column(Integer, index=True) # 0 means current node is root node
 
 
 class Bearing(Base):
@@ -84,7 +58,7 @@ class Bearing(Base):
 
     id = Column(Integer, primary_key=True)
 
-    deviceinfo_Id = Column(Integer, ForeignKey("deviceinfo.id"))
+    parent_id = Column(Integer)
 
     bpfi = Column(Float)
 
@@ -100,11 +74,11 @@ class Gear(Base):
 
     id = Column(Integer, primary_key=True)
 
-    deviceinfo_Id = Column(Integer, ForeignKey("deviceinfo.id"))
+    parent_id = Column(Integer)
 
 
-class BearingParameter(Base):
-    __tablename__ = "bearing_parameter"
+class BearingWorkingCondition(Base):
+    __tablename__ = "bearing_working_condition"
 
     id = Column(Integer, primary_key=True)
 
@@ -121,22 +95,12 @@ class BearingParameter(Base):
         return f"{self.name}/rps:{self.rps}/dir:{self.direction}"
 
 
-class GearParameter(Base):
-    __tablename__ = "gear_parameter"
+class GearWorkingCondition(Base):
+    __tablename__ = "gear_working_condition"
 
     id = Column(Integer, primary_key=True)
 
     name = Column(String(128))
-
-
-class DataChannel(Base):
-    __tablename__ = "data_channel"
-
-    id = Column(Integer, primary_key=True)
-
-    device_id = Column(Integer, ForeignKey("device_info.id"))
-
-    name = Column(String(128), unique=True)
 
 
 class VibrationData(Base):
@@ -147,9 +111,9 @@ class VibrationData(Base):
 
     id = Column(Integer, primary_key=True)
 
-    channel_id = Column(Integer, ForeignKey("data_channel.id"))
+    parent_id = Column(Integer, index=True) # point to tree node
 
-    timestamp = Column(DateTime)
+    timestamp = Column(DateTime, index=True)
 
     mean = Column(Float) #均值
 
@@ -177,14 +141,13 @@ class VibrationData(Base):
 
     variance = Column(Float) # 方差
 
-    wave = Column(LargeBinary) #原始波形
-
+    wave = Column(LargeBinary) # 原始波形
 
 
 class Database:
     def __init__(self, db_url = None):
         if db_url is None:
-            db_file_path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../bearing_features.db"))
+            db_file_path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../vibrationdata.db"))
             db_url = f"sqlite:///{db_file_path}"
         self.engine = create_engine(db_url)
         self.session_base = sessionmaker(bind= self.engine)
@@ -195,9 +158,19 @@ class Database:
         with self.session_base() as sess:
             nodes = sess.query(TreeNode).all()
         if nodes is None:
-            return None
-        
+            return []
     
+    def make_treenode(self, parent_node, name, category, description=None):
+        with self.session_base() as sess:
+            parent_id = parent_node.id if parent_node else 0
+            node = sess.query(TreeNode).filter(parent_id=parent_id, name=name)
+            if node:
+                raise TreeNodeExists(f"node [{name}/{node.id}] already exist under [{parent_node.name}]")
+            node = TreeNode(name=name, description=description, parent_id=parent_id, category=category)
+            sess.add(node)
+            sess.commit()
+            return node
+
     def list_features(self, bearing_name, channel, *features):
         result = []
         for feature in features:
@@ -215,7 +188,7 @@ class Database:
         with self.session_base() as sess:
             sess.query(BearingDataFeature).delete()
             sess.commit()
-    
+
     def add_features(self, feature):
         with self.session_base() as sess:
             if isinstance(feature, list):
@@ -224,4 +197,3 @@ class Database:
             else:
                 sess.add(f)
             sess.commit()
-    
