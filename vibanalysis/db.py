@@ -29,11 +29,15 @@ DATASOURCE_XJTU = 0
 DATASOURCE_CWRU = 1
 
 
+# 目录数据
+
+DATA_CATEGORY_FOLDER = 0
 # 轴承数据
-DATA_TYPE = 0
+
+DATA_CATEGORY_BEARING = 1
 
 #齿轮数据
-DATA_TYPE = 1
+DATA_CATEGORY_GEAR = 2
 
 
 class TreeNode(Base):
@@ -45,10 +49,9 @@ class TreeNode(Base):
 
     description = Column(String(256))
 
-    category = Column(Integer)
+    category = Column(Integer) # 轴承数据/齿轮数据/目录
 
     parent_id = Column(Integer) # 0 means current node is root node
-
 
 
 class DataCollection(Base):
@@ -92,19 +95,6 @@ class Bearing(Base):
     ftf = Column(Float)
 
 
-class BearingInfo:
-    id = 0
-
-    name = ""
-
-    bpfi = 0.0
-
-    bpfo = 0.0
-
-    bsf = 0.0
-
-    ftf =0.0
-
 class Gear(Base):
     __tablename__ = "gear_info"
 
@@ -113,13 +103,6 @@ class Gear(Base):
     deviceinfo_Id = Column(Integer, ForeignKey("deviceinfo.id"))
 
 
-class GearInfo:
-
-    id = 0
-
-    name = ""
-
- 
 class BearingParameter(Base):
     __tablename__ = "bearing_parameter"
 

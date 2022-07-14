@@ -1,5 +1,5 @@
-from bearing.bearingdata import  XJTUData
-from bearing.db import Database
+from vibanalysis.bearingdata import  XJTUData
+from vibanalysis.db import Database
 
 def refresh_features():
     db = Database()
