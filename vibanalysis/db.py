@@ -95,6 +95,18 @@ class BearingWorkingCondition(Base):
         return f"{self.name}/rps:{self.rps}/dir:{self.direction}"
 
 
+class BearingFault(Base):
+    __tablename__ = "bearing_fault"
+
+    id = Column(Integer, primary_key=True)
+
+    parent_id = Column(Integer) # point to tree node
+
+    diameter = Column(Float) # fault diameter
+
+    position = Column(Integer) # 0->inner, 1->outer, 2->ball, 3->misalignment, 4-> loose base
+
+
 class GearWorkingCondition(Base):
     __tablename__ = "gear_working_condition"
 
@@ -103,11 +115,11 @@ class GearWorkingCondition(Base):
     name = Column(String(128))
 
 
-class VibrationData(Base):
+class VibrationFeatureData(Base):
     '''
     vibration data, esspecial the acceleration data.
     '''
-    __tablename__ = "vibration_data"
+    __tablename__ = "vibration_feature_data"
 
     id = Column(Integer, primary_key=True)
 
@@ -135,11 +147,21 @@ class VibrationData(Base):
 
     allowance_factor = Column(Float) #裕度因子
 
-    pulse_factror = Column(Float) #脉冲因为
+    pulse_factror = Column(Float) #脉冲因子
 
     std_var = Column(Float) # 标准差
 
     variance = Column(Float) # 方差
+
+
+class VibrationWaveData(Base):
+    __tablename__ = "vibration_wave_data"
+
+    id = Column(Integer, primary_key=True)
+
+    parent_id = Column(Integer, index=True) # point to tree node
+
+    timestamp = Column(DateTime, index=True)
 
     wave = Column(LargeBinary) # 原始波形
 
@@ -197,3 +219,4 @@ class Database:
             else:
                 sess.add(f)
             sess.commit()
+    

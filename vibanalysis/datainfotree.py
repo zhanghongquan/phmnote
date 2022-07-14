@@ -7,6 +7,7 @@ ROOT
       |--collection1
            |---bearing1_1
                 |---data_node
+
 '''
 
 from .utils import InvalidParameter
@@ -142,3 +143,6 @@ class DataInfoTree(Database):
             self.root_node = info_node
         else:
             self.current_node.add_child(info_node)
+    
+    def load_features(self, name):
+        pass
