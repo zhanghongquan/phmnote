@@ -2,6 +2,9 @@ import requests
 import os
 from pyquery import PyQuery as PQ
 
+'''
+西储大学轴承故障数据集
+'''
 
 
 def get_alllinks(url):
@@ -33,7 +36,7 @@ def download_files(url, folder):
 
 
 if __name__ == "__main__":
-    download_files("https://engineering.case.edu/bearingdatacenter/normal-baseline-data", "data/cwru_data/normal")
-    download_files("https://engineering.case.edu/bearingdatacenter/12k-drive-end-bearing-fault-data", "data/cwru_data/12KDriveEnd")
-    download_files("https://engineering.case.edu/bearingdatacenter/48k-drive-end-bearing-fault-data", "data/cwru_data/48KDriveEnd")
-    download_files("https://engineering.case.edu/bearingdatacenter/12k-fan-end-bearing-fault-data", "data/crwu_data/FanEnd")
+    download_files("https://engineering.case.edu/bearingdatacenter/normal-baseline-data", "../data/cwru_data/normal")
+    download_files("https://engineering.case.edu/bearingdatacenter/12k-drive-end-bearing-fault-data", "../data/cwru_data/12KDriveEnd")
+    download_files("https://engineering.case.edu/bearingdatacenter/48k-drive-end-bearing-fault-data", "../data/cwru_data/48KDriveEnd")
+    download_files("https://engineering.case.edu/bearingdatacenter/12k-fan-end-bearing-fault-data", "../data/crwu_data/FanEnd")

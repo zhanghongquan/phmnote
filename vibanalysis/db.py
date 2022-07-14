@@ -1,6 +1,15 @@
 '''
 计算轴承数据的特征并存储到数据库，后续可以直接使用
-当前只计算西交大的轴承数据的特征
+
+故障数据的元数据有如下几个
+1. 数据类型，例如是轴承数据、齿轮数据
+2. 数据产生放(租户)
+3. 数据集合
+4. 逻辑部件名称
+5.      部件属性
+6.          测点
+7.              数据
+8.              参数
 '''
 
 from ast import For
@@ -25,6 +34,21 @@ DATA_TYPE = 0
 
 #齿轮数据
 DATA_TYPE = 1
+
+
+class TreeNode(Base):
+    __tablename__ = "tree_node"
+
+    id = Column(Integer, primary_key=True)
+
+    name = Column(String(64))
+
+    description = Column(String(256))
+
+    category = Column(Integer)
+
+    parent_id = Column(Integer) # 0 means current node is root node
+
 
 
 class DataCollection(Base):
@@ -182,6 +206,14 @@ class Database:
         self.engine = create_engine(db_url)
         self.session_base = sessionmaker(bind= self.engine)
         Base.metadata.create_all(self.engine)
+    
+    def load_base_tree(self):
+        nodes = None
+        with self.session_base() as sess:
+            nodes = sess.query(TreeNode).all()
+        if nodes is None:
+            return None
+        
     
     def list_features(self, bearing_name, channel, *features):
         result = []
