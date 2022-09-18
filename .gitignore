@@ -3,3 +3,4 @@ __pycache__/
 *~
 /data/
 bearing_features.db
+vibrationdata.db

@@ -13,9 +13,9 @@
 '''
 
 import os
-from sqlalchemy import Column, ForeignKey, create_engine, String, Float, Integer, LargeBinary, DateTime
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base, relationship
+from sqlalchemy import Column, ForeignKey, create_engine, String, Float, Integer, LargeBinary, DateTime, event
+from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.ext.declarative import declarative_base
 
 from .utils import TreeNodeExists
 
@@ -29,10 +29,9 @@ DATASOURCE_CWRU = 1
 
 
 # 目录数据
-
 DATA_CATEGORY_FOLDER = 0
-# 轴承数据
 
+# 轴承数据
 DATA_CATEGORY_BEARING = 1
 
 #齿轮数据
@@ -40,6 +39,10 @@ DATA_CATEGORY_GEAR = 2
 
 
 class TreeNode(Base):
+    '''
+    使用树来记录数据
+
+    '''
     __tablename__ = "tree_node"
 
     id = Column(Integer, primary_key=True)
@@ -54,7 +57,7 @@ class TreeNode(Base):
 
 
 class Bearing(Base):
-    __tabelname__ = "bearing_info"
+    __tablename__ = "bearing_info"
 
     id = Column(Integer, primary_key=True)
 
@@ -153,6 +156,12 @@ class VibrationFeatureData(Base):
 
     variance = Column(Float) # 方差
 
+# event.listen(
+#     VibrationFeatureData.__table__,
+#     'after_create',
+#     DDL(f"SELECT create_hypertable('{VibrationFeatureData.__tablename__}', 'timestamp');")
+# )
+
 
 class VibrationWaveData(Base):
     __tablename__ = "vibration_wave_data"
@@ -165,6 +174,11 @@ class VibrationWaveData(Base):
 
     wave = Column(LargeBinary) # 原始波形
 
+# event.listen(
+#     VibrationWaveData.__table__,
+#     'after_create',
+#     DDL(f"SELECT create_hypertable('{VibrationWaveData.__tablename__}', 'timestamp');")
+# )
 
 class Database:
     def __init__(self, db_url = None):
@@ -201,14 +215,14 @@ class Database:
         for feature in features:
             filtered.append(Column(feature))
         with self.session_base() as sess:
-            for x in sess.query(BearingDataFeature).filter_by(bearing_name=bearing_name, channel=channel).values(*filtered):
+            for x in sess.query(VibrationFeatureData).filter_by(bearing_name=bearing_name, channel=channel).values(*filtered):
                 for i in range(0, len(features)):
                     result[i].append(x[i])
         return result
 
     def delete_all_features(self):
         with self.session_base() as sess:
-            sess.query(BearingDataFeature).delete()
+            sess.query(VibrationFeatureData).delete()
             sess.commit()
 
     def add_features(self, feature):

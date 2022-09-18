@@ -1,11 +1,11 @@
 from abc import abstractmethod
 import os
+from re import sub
 import scipy.io as spio
 import pandas as pd
 import numpy as np
 from scipy import stats
-from .db import VibrationFeatureData
-
+from .db import BearingDataFeature
 
 class InvalidParamaterException(Exception):
     def __init__(self, *args: object) -> None:
@@ -155,7 +155,7 @@ class BearingData:
         '''
         计算单通道数据特征
         '''
-        f = VibrationFeatureData()
+        f = BearingDataFeature()
         abs_data = np.abs(data)
         f.mean = np.mean(abs_data)
         f.peak = np.max(abs_data)
@@ -193,16 +193,10 @@ class XJTUBearingData(BearingData):
     
     @property
     def H(self):
-        '''
-        水平方向振动数据，单位是g
-        '''
         return self.data_H
     
     @property
     def V(self):
-        '''
-        垂直方向振动数据，单位是g
-        '''
         return self.data_V
 
     def load_data(self):
@@ -238,41 +232,26 @@ class CWRUBearingData(BearingData):
         self.data_de = None # driver end 
         self.data_fe = None # fan end
         self.data_ba = None # base
-        self.direction_data = 0
+        self.diretion_data = 0
 
     @property
     def de(self):
-        '''
-        drive end vibration data
-        '''
         return self.data_de
     
     @property
     def fe(self):
-        '''
-        fan end vibration data
-        '''
         return self.data_fe
     
     @property
     def ba(self):
-        '''
-        base vibration data
-        '''
         return self.data_ba
     
     @property
     def fault_size(self):
-        '''
-        local fault size in inch
-        '''
         return self.fault_part_size
     
     @property
     def direction(self):
-        '''
-        传感器安装方向， 使用时钟时针方向来指代。例如3点钟方向
-        '''
         return self.direction_data
     
     def load_data(self):
@@ -303,7 +282,7 @@ class CWRUBearingData(BearingData):
         name = name.split("_")[0]
         sects = name.split("@")
         if len(sects) == 2:
-            self.direction_data = int(sects[1])
+            self.direction = int(sects[1])
         name = sects[0]
         name = name.strip("0")
         self.fault_part_size = int(name)
@@ -398,30 +377,18 @@ class CWRUData:
 
     @property
     def fe(self):
-        '''
-        fan end data
-        '''
         return self.fe_data
     
     @property
     def de12k(self):
-        '''
-        drive end 12k sample rate
-        '''
         return self.f12kde_data
     
     @property
     def de48k(self):
-        '''
-        drive end 48k sample rate
-        '''
         return self.f48kde_data
     
     @property
     def normal(self):
-        '''
-        normal data
-        '''
         return self.normal_data
 
     def list_files(self, root_path):
